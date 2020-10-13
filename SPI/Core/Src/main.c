@@ -133,10 +133,8 @@ int main(void)
   printf("Done configuring LoRaModule\r\n");
 
   //entry transmitter (master) or receiver (slave) mode
-  if (master == 1)
-      ret = SX1278_LoRaEntryTx(&SX1278, 16, 2000);
-  else
-      ret = SX1278_LoRaEntryRx(&SX1278, 16, 2000);
+  if (master == 1) ret = SX1278_LoRaEntryTx(&SX1278, 16, 2000);
+  else ret = SX1278_LoRaEntryRx(&SX1278, 16, 2000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -144,51 +142,50 @@ int main(void)
   while (1)
   {
 	  if (master == 1) {
-	  			printf("Master ...\r\n");
-	  			HAL_Delay(2500);
-	  			printf("Sending package...\r\n");
+		  printf("Master ...\r\n");
+		  HAL_Delay(2500);
+		  printf("Sending package...\r\n");
 
-	  			message_length = sprintf(buffer, "Hello %d", message);
-	  			ret = SX1278_LoRaEntryTx(&SX1278, message_length, 2000);
-	  			printf("Entry: %d\r\n", ret);
+		  message_length = sprintf(buffer, "Hello %d", message);
+		  ret = SX1278_LoRaEntryTx(&SX1278, message_length, 2000);
+		  printf("Entry: %d\r\n", ret);
 
-	  			printf("Sending %s\r\n", buffer);
-	  			ret = SX1278_LoRaTxPacket(&SX1278, (uint8_t *) buffer, message_length,
-	  					2000);
-	  			message += 1;
+		  printf("Sending %s\r\n", buffer);
+		  ret = SX1278_LoRaTxPacket(&SX1278, (uint8_t *) buffer, message_length, 2000);
+		  message += 1;
 
-	  			printf("Transmission: %d\r\n", ret);
-	  			printf("Package sent...\r\n");
+		  printf("Transmission: %d\r\n", ret);
+		  printf("Package sent...\r\n");
 
 
-	  			uint8_t txByte = 0x42;
-	  			uint8_t rxByte = SX1278_SPIRead(&SX1278, 0x42);
-	  			/*HAL_GPIO_WritePin(NSS_GPIO_Port, NSS_Pin, GPIO_PIN_RESET);
-	  			HAL_SPI_TransmitReceive(&hspi1, &txByte, &rxByte, 1, 1000);
-	  			txByte = 0x00;
-	  			HAL_SPI_TransmitReceive(&hspi1, &txByte, &rxByte, 1, 1000);
-	  			HAL_GPIO_WritePin(NSS_GPIO_Port, NSS_Pin, GPIO_PIN_SET);
-*/
-	  			printf("Version : %d\r\n", rxByte);
+		  uint8_t txByte = 0x42;
+		  uint8_t rxByte = SX1278_SPIRead(&SX1278, 0x42);
+		  HAL_GPIO_WritePin(NSS_GPIO_Port, NSS_Pin, GPIO_PIN_RESET);
+		  HAL_SPI_TransmitReceive(&hspi1, &txByte, &rxByte, 1, 1000);
+		  txByte = 0x00;
+		  HAL_SPI_TransmitReceive(&hspi1, &txByte, &rxByte, 1, 1000);
+		  HAL_GPIO_WritePin(NSS_GPIO_Port, NSS_Pin, GPIO_PIN_SET);
 
-	  			/*uint8_t SEND = 0xAC;
-	  			uint8_t RCV = 0;
-	  			HAL_SPI_TransmitReceive(&hspi1, &SEND, &RCV, 1, HAL_MAX_DELAY);
-	  			if(RCV == SEND) printf("OKAY !");*/
-	  		} else {
-	  			printf("Slave ...\r\n");
-	  			HAL_Delay(1000);
-	  			printf("Receiving package...\r\n");
+		  printf("Version : %d\r\n", rxByte);
 
-	  			ret = SX1278_LoRaRxPacket(&SX1278);
-	  			printf("Received: %d\r\n", ret);
-	  			if (ret > 0) {
-	  				SX1278_read(&SX1278, (uint8_t *) buffer, ret);
-	  				printf("Content (%d): %s\r\n", ret, buffer);
-	  			}
-	  			printf("Package received ...\r\n");
+		/*uint8_t SEND = 0xAC;
+		uint8_t RCV = 0;
+		HAL_SPI_TransmitReceive(&hspi1, &SEND, &RCV, 1, HAL_MAX_DELAY);
+		if(RCV == SEND) printf("OKAY !");*/
+	  } else {
+		  printf("Slave ...\r\n");
+		  HAL_Delay(1000);
+		  printf("Receiving package...\r\n");
 
-	  		}
+		  ret = SX1278_LoRaRxPacket(&SX1278);
+		  printf("Received: %d\r\n", ret);
+		  if (ret > 0) {
+			  SX1278_read(&SX1278, (uint8_t *) buffer, ret);
+			  printf("Content (%d): %s\r\n", ret, buffer);
+		  }
+		  printf("Package received ...\r\n");
+
+	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
