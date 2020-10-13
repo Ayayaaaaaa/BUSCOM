@@ -47,8 +47,8 @@ SPI.bin \
 all: SPI.elf secondary-outputs
 
 # Tool invocations
-SPI.elf: $(OBJS) $(USER_OBJS) C:\Users\apa\OneDrive\DOCUMENTS\TP_BUSCOM\SPI\STM32F446RETX_FLASH.ld
-	arm-none-eabi-gcc -o "SPI.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\apa\OneDrive\DOCUMENTS\TP_BUSCOM\SPI\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="SPI.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+SPI.elf: $(OBJS) $(USER_OBJS) D:\HUB\BUSCOM\SPI\STM32F446RETX_FLASH.ld
+	arm-none-eabi-gcc -o "SPI.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"D:\HUB\BUSCOM\SPI\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="SPI.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

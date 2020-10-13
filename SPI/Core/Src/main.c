@@ -22,6 +22,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdio.h>
 #include "SX1278.h"
 /* USER CODE END Includes */
 
@@ -40,7 +41,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-SPI_HandleTypeDef hspi2;
+SPI_HandleTypeDef hspi1;
 
 UART_HandleTypeDef huart2;
 
@@ -52,14 +53,25 @@ UART_HandleTypeDef huart2;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
-static void MX_SPI2_Init(void);
+static void MX_SPI1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+//! @last_edit : 10/07/2020
+//! @details : PRINTF TO UART handling
+int __io_putchar(int ch)
+{
+	/* Place your implementation of fputc here */
+	/* e.g. write a character to the USARTx and Loop until the end of transmission */
+	while (HAL_OK != HAL_UART_Transmit(&huart2, (uint8_t *) &ch, 1, HAL_MAX_DELAY))
+	{
+		;
+	}
+	return ch;
+}
 /* USER CODE END 0 */
 
 /**
@@ -91,15 +103,92 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
-  MX_SPI2_Init();
+  MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
+  //define necessary structures
+  SX1278_hw_t SX1278_hw;
+  SX1278_t SX1278;
+  int master = 1;
+  int ret;
+  char buffer[64];
+  int message;
+  int message_length;
 
+  //initialize hardware for LoRa module
+  SX1278_hw.dio0.port = DIO0_GPIO_Port;
+  SX1278_hw.dio0.pin = DIO0_Pin;
+  SX1278_hw.nss.port = NSS_GPIO_Port;
+  SX1278_hw.nss.pin = NSS_Pin;
+  SX1278_hw.reset.port = RESET_GPIO_Port;
+  SX1278_hw.reset.pin = RESET_Pin;
+  SX1278_hw.spi = &hspi1;
+
+  //initialize logic for LoRa module
+  SX1278.hw = &SX1278_hw;
+
+  //configure module
+  printf("Configuring LoRa module\r\n");
+  SX1278_begin(&SX1278, SX1278_433MHZ, SX1278_POWER_17DBM, SX1278_LORA_SF_8,
+          SX1278_LORA_BW_20_8KHZ, 10);
+  printf("Done configuring LoRaModule\r\n");
+
+  //entry transmitter (master) or receiver (slave) mode
+  if (master == 1)
+      ret = SX1278_LoRaEntryTx(&SX1278, 16, 2000);
+  else
+      ret = SX1278_LoRaEntryRx(&SX1278, 16, 2000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  if (master == 1) {
+	  			printf("Master ...\r\n");
+	  			HAL_Delay(2500);
+	  			printf("Sending package...\r\n");
+
+	  			message_length = sprintf(buffer, "Hello %d", message);
+	  			ret = SX1278_LoRaEntryTx(&SX1278, message_length, 2000);
+	  			printf("Entry: %d\r\n", ret);
+
+	  			printf("Sending %s\r\n", buffer);
+	  			ret = SX1278_LoRaTxPacket(&SX1278, (uint8_t *) buffer, message_length,
+	  					2000);
+	  			message += 1;
+
+	  			printf("Transmission: %d\r\n", ret);
+	  			printf("Package sent...\r\n");
+
+
+	  			uint8_t txByte = 0x42;
+	  			uint8_t rxByte = SX1278_SPIRead(&SX1278, 0x42);
+	  			/*HAL_GPIO_WritePin(NSS_GPIO_Port, NSS_Pin, GPIO_PIN_RESET);
+	  			HAL_SPI_TransmitReceive(&hspi1, &txByte, &rxByte, 1, 1000);
+	  			txByte = 0x00;
+	  			HAL_SPI_TransmitReceive(&hspi1, &txByte, &rxByte, 1, 1000);
+	  			HAL_GPIO_WritePin(NSS_GPIO_Port, NSS_Pin, GPIO_PIN_SET);
+*/
+	  			printf("Version : %d\r\n", rxByte);
+
+	  			/*uint8_t SEND = 0xAC;
+	  			uint8_t RCV = 0;
+	  			HAL_SPI_TransmitReceive(&hspi1, &SEND, &RCV, 1, HAL_MAX_DELAY);
+	  			if(RCV == SEND) printf("OKAY !");*/
+	  		} else {
+	  			printf("Slave ...\r\n");
+	  			HAL_Delay(1000);
+	  			printf("Receiving package...\r\n");
+
+	  			ret = SX1278_LoRaRxPacket(&SX1278);
+	  			printf("Received: %d\r\n", ret);
+	  			if (ret > 0) {
+	  				SX1278_read(&SX1278, (uint8_t *) buffer, ret);
+	  				printf("Content (%d): %s\r\n", ret, buffer);
+	  			}
+	  			printf("Package received ...\r\n");
+
+	  		}
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -129,7 +218,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLM = 16;
-  RCC_OscInitStruct.PLL.PLLN = 336;
+  RCC_OscInitStruct.PLL.PLLN = 308;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV4;
   RCC_OscInitStruct.PLL.PLLQ = 2;
   RCC_OscInitStruct.PLL.PLLR = 2;
@@ -153,40 +242,40 @@ void SystemClock_Config(void)
 }
 
 /**
-  * @brief SPI2 Initialization Function
+  * @brief SPI1 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_SPI2_Init(void)
+static void MX_SPI1_Init(void)
 {
 
-  /* USER CODE BEGIN SPI2_Init 0 */
+  /* USER CODE BEGIN SPI1_Init 0 */
 
-  /* USER CODE END SPI2_Init 0 */
+  /* USER CODE END SPI1_Init 0 */
 
-  /* USER CODE BEGIN SPI2_Init 1 */
+  /* USER CODE BEGIN SPI1_Init 1 */
 
-  /* USER CODE END SPI2_Init 1 */
-  /* SPI2 parameter configuration*/
-  hspi2.Instance = SPI2;
-  hspi2.Init.Mode = SPI_MODE_MASTER;
-  hspi2.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
-  hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
-  hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
-  hspi2.Init.NSS = SPI_NSS_SOFT;
-  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
-  hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
-  hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
-  hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-  hspi2.Init.CRCPolynomial = 10;
-  if (HAL_SPI_Init(&hspi2) != HAL_OK)
+  /* USER CODE END SPI1_Init 1 */
+  /* SPI1 parameter configuration*/
+  hspi1.Instance = SPI1;
+  hspi1.Init.Mode = SPI_MODE_MASTER;
+  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi1.Init.NSS = SPI_NSS_SOFT;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
+  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi1.Init.CRCPolynomial = 10;
+  if (HAL_SPI_Init(&hspi1) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN SPI2_Init 2 */
+  /* USER CODE BEGIN SPI1_Init 2 */
 
-  /* USER CODE END SPI2_Init 2 */
+  /* USER CODE END SPI1_Init 2 */
 
 }
 
@@ -239,7 +328,10 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(RESET_GPIO_Port, RESET_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(NSS_GPIO_Port, NSS_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -247,12 +339,31 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : LD2_Pin */
-  GPIO_InitStruct.Pin = LD2_Pin;
+  /*Configure GPIO pin : RESET_Pin */
+  GPIO_InitStruct.Pin = RESET_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(RESET_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : DIO0_Pin */
+  GPIO_InitStruct.Pin = DIO0_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(DIO0_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : DIO1_Pin DIO3_Pin DIO2_Pin */
+  GPIO_InitStruct.Pin = DIO1_Pin|DIO3_Pin|DIO2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : NSS_Pin */
+  GPIO_InitStruct.Pin = NSS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  HAL_GPIO_Init(NSS_GPIO_Port, &GPIO_InitStruct);
 
 }
 
