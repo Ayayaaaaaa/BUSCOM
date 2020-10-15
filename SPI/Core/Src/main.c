@@ -23,7 +23,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "SX1272.h"
-#define RECEIVER 0
+#define RECEIVER 1
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
