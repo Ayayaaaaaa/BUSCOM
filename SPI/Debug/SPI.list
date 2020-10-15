@@ -27,23 +27,23 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   ALLOC
  11 .ARM.attributes 00000030  00000000  00000000  0002000c  2**0
                   CONTENTS, READONLY
- 12 .debug_info   00009676  00000000  00000000  0002003c  2**0
+ 12 .debug_info   000096c4  00000000  00000000  0002003c  2**0
                   CONTENTS, READONLY, DEBUGGING
- 13 .debug_abbrev 000018e2  00000000  00000000  000296b2  2**0
+ 13 .debug_abbrev 000018e2  00000000  00000000  00029700  2**0
                   CONTENTS, READONLY, DEBUGGING
- 14 .debug_aranges 00000918  00000000  00000000  0002af98  2**3
+ 14 .debug_aranges 00000920  00000000  00000000  0002afe8  2**3
                   CONTENTS, READONLY, DEBUGGING
- 15 .debug_ranges 00000840  00000000  00000000  0002b8b0  2**3
+ 15 .debug_ranges 00000848  00000000  00000000  0002b908  2**3
                   CONTENTS, READONLY, DEBUGGING
- 16 .debug_macro  000208b0  00000000  00000000  0002c0f0  2**0
+ 16 .debug_macro  0002093b  00000000  00000000  0002c150  2**0
                   CONTENTS, READONLY, DEBUGGING
- 17 .debug_line   00007c81  00000000  00000000  0004c9a0  2**0
+ 17 .debug_line   00007cae  00000000  00000000  0004ca8b  2**0
                   CONTENTS, READONLY, DEBUGGING
- 18 .debug_str    000c5a2e  00000000  00000000  00054621  2**0
+ 18 .debug_str    000c5bce  00000000  00000000  00054739  2**0
                   CONTENTS, READONLY, DEBUGGING
- 19 .comment      0000007b  00000000  00000000  0011a04f  2**0
+ 19 .comment      0000007b  00000000  00000000  0011a307  2**0
                   CONTENTS, READONLY
- 20 .debug_frame  00002480  00000000  00000000  0011a0cc  2**2
+ 20 .debug_frame  000024a4  00000000  00000000  0011a384  2**2
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -7788,7 +7788,7 @@ void SX1272_Init(void) {
  8003228:	480f      	ldr	r0, [pc, #60]	; (8003268 <SX1272_Init+0x48>)
  800322a:	f7fd ff9d 	bl	8001168 <HAL_GPIO_WritePin>
 
-	SX1272_WriteRegister(0x01, 0x00);
+	SX1272_WriteRegister(RegOpMode, FSK_SLEEP);
  800322e:	2100      	movs	r1, #0
  8003230:	2001      	movs	r0, #1
  8003232:	f000 f81b 	bl	800326c <SX1272_WriteRegister>
@@ -7796,7 +7796,7 @@ void SX1272_Init(void) {
 	HAL_Delay(15);
  8003236:	200f      	movs	r0, #15
  8003238:	f7fd fcae 	bl	8000b98 <HAL_Delay>
-	SX1272_WriteRegister(0x01, 0x80);
+	SX1272_WriteRegister(RegOpMode, LORA_SLEEP);
  800323c:	2180      	movs	r1, #128	; 0x80
  800323e:	2001      	movs	r0, #1
  8003240:	f000 f814 	bl	800326c <SX1272_WriteRegister>
@@ -7804,15 +7804,15 @@ void SX1272_Init(void) {
 	HAL_Delay(15);
  8003244:	200f      	movs	r0, #15
  8003246:	f7fd fca7 	bl	8000b98 <HAL_Delay>
-	SX1272_WriteRegister(0x06, 0xD9); //Frequency 868.5MHz : 0xD92000
+	SX1272_WriteRegister(RegFrMsb, 0xD9); //Frequency 868.5MHz : 0xD92000
  800324a:	21d9      	movs	r1, #217	; 0xd9
  800324c:	2006      	movs	r0, #6
  800324e:	f000 f80d 	bl	800326c <SX1272_WriteRegister>
-	SX1272_WriteRegister(0x07, 0x20);
+	SX1272_WriteRegister(RegFrMib, 0x20);
  8003252:	2120      	movs	r1, #32
  8003254:	2007      	movs	r0, #7
  8003256:	f000 f809 	bl	800326c <SX1272_WriteRegister>
-	SX1272_WriteRegister(0x08, 0x00);
+	SX1272_WriteRegister(RegFrLsb, 0x00);
  800325a:	2100      	movs	r1, #0
  800325c:	2008      	movs	r0, #8
  800325e:	f000 f805 	bl	800326c <SX1272_WriteRegister>
@@ -7883,6 +7883,8 @@ void SX1272_WriteRegister(uint8_t reg, uint8_t val) {
  80032d0:	20000028 	.word	0x20000028
 
 080032d4 <SX1272_ReadRegister>:
+    HAL_GPIO_WritePin(NSS_GPIO_Port, NSS_Pin, 1);
+}
 
 //! @last_edit : 15/10/2020
 //! @details :
@@ -7995,7 +7997,7 @@ void SX1272_BurstRead(uint8_t addr, uint8_t* rxBuf, uint8_t length) {
  8003394:	20000028 	.word	0x20000028
 
 08003398 <SX1272_Receive>:
-	SX1272_WriteRegister(0x12, 0xFF); // clear interrupt
+    SX1272_WriteRegister(RegIrqFlags, 0xFF);//clear interrupt
 }
 
 //! @last_edit : 15/10/2020
@@ -8008,12 +8010,13 @@ uint8_t SX1272_Receive(uint8_t rx[RCV_BUFFER_MAX_LEN]) {
 	uint8_t length = 0;
  80033a0:	2300      	movs	r3, #0
  80033a2:	73fb      	strb	r3, [r7, #15]
-	uint8_t addr = SX1272_ReadRegister(0x0F); // Rx base addr
+
+	uint8_t addr = SX1272_ReadRegister(RegFifoRxBaseAddr);//Rx base addr
  80033a4:	200f      	movs	r0, #15
  80033a6:	f7ff ff95 	bl	80032d4 <SX1272_ReadRegister>
  80033aa:	4603      	mov	r3, r0
  80033ac:	73bb      	strb	r3, [r7, #14]
-	SX1272_WriteRegister(0x0D, addr); // write fifo addr ptr
+	SX1272_WriteRegister(RegFifoAddrPtr, addr);//write fifo addr ptr
  80033ae:	7bbb      	ldrb	r3, [r7, #14]
  80033b0:	4619      	mov	r1, r3
  80033b2:	200d      	movs	r0, #13
@@ -8022,21 +8025,21 @@ uint8_t SX1272_Receive(uint8_t rx[RCV_BUFFER_MAX_LEN]) {
 	HAL_Delay(15);
  80033b8:	200f      	movs	r0, #15
  80033ba:	f7fd fbed 	bl	8000b98 <HAL_Delay>
-	SX1272_WriteRegister(0x01, 0x81);
+	SX1272_WriteRegister(RegOpMode, LORA_STBY);
  80033be:	2181      	movs	r1, #129	; 0x81
  80033c0:	2001      	movs	r0, #1
  80033c2:	f7ff ff53 	bl	800326c <SX1272_WriteRegister>
 	HAL_Delay(15);
  80033c6:	200f      	movs	r0, #15
  80033c8:	f7fd fbe6 	bl	8000b98 <HAL_Delay>
-	SX1272_WriteRegister(0x01, 0x84);
+	SX1272_WriteRegister(RegOpMode, LORA_FSRX);
  80033cc:	2184      	movs	r1, #132	; 0x84
  80033ce:	2001      	movs	r0, #1
  80033d0:	f7ff ff4c 	bl	800326c <SX1272_WriteRegister>
 	HAL_Delay(15);
  80033d4:	200f      	movs	r0, #15
  80033d6:	f7fd fbdf 	bl	8000b98 <HAL_Delay>
-	SX1272_WriteRegister(0x01, 0x85);
+	SX1272_WriteRegister(RegOpMode, LORA_RX_CONTINUOUS);
  80033da:	2185      	movs	r1, #133	; 0x85
  80033dc:	2001      	movs	r0, #1
  80033de:	f7ff ff45 	bl	800326c <SX1272_WriteRegister>
@@ -8044,7 +8047,7 @@ uint8_t SX1272_Receive(uint8_t rx[RCV_BUFFER_MAX_LEN]) {
  80033e2:	200f      	movs	r0, #15
  80033e4:	f7fd fbd8 	bl	8000b98 <HAL_Delay>
 
-	while((SX1272_ReadRegister(0x12) && 0xC0)==0); // interrupt
+	while((SX1272_ReadRegister(RegIrqFlags) && 0xC0)==0);//interrupt
  80033e8:	bf00      	nop
  80033ea:	2012      	movs	r0, #18
  80033ec:	f7ff ff72 	bl	80032d4 <SX1272_ReadRegister>
@@ -8052,7 +8055,7 @@ uint8_t SX1272_Receive(uint8_t rx[RCV_BUFFER_MAX_LEN]) {
  80033f2:	2b00      	cmp	r3, #0
  80033f4:	d0f9      	beq.n	80033ea <SX1272_Receive+0x52>
 
-	uint8_t interrupt = SX1272_ReadRegister(0x12);
+	uint8_t interrupt = SX1272_ReadRegister(RegIrqFlags);
  80033f6:	2012      	movs	r0, #18
  80033f8:	f7ff ff6c 	bl	80032d4 <SX1272_ReadRegister>
  80033fc:	4603      	mov	r3, r0
@@ -8066,30 +8069,30 @@ uint8_t SX1272_Receive(uint8_t rx[RCV_BUFFER_MAX_LEN]) {
  8003408:	e019      	b.n	800343e <SX1272_Receive+0xa6>
 	}
 
-	addr = SX1272_ReadRegister(0x10); // Rx current addr
+	addr = SX1272_ReadRegister(RegFifoRxCurrentAddr);//Rx current addr
  800340a:	2010      	movs	r0, #16
  800340c:	f7ff ff62 	bl	80032d4 <SX1272_ReadRegister>
  8003410:	4603      	mov	r3, r0
  8003412:	73bb      	strb	r3, [r7, #14]
-	length = SX1272_ReadRegister(0x13); // Rx current addr
+	length = SX1272_ReadRegister(RegRxNbBytes);//Rx current addr
  8003414:	2013      	movs	r0, #19
  8003416:	f7ff ff5d 	bl	80032d4 <SX1272_ReadRegister>
  800341a:	4603      	mov	r3, r0
  800341c:	73fb      	strb	r3, [r7, #15]
 
-	SX1272_WriteRegister(0x0D, addr); // write fifo addr ptr
+	SX1272_WriteRegister(RegFifoAddrPtr, addr);//write fifo addr ptr
  800341e:	7bbb      	ldrb	r3, [r7, #14]
  8003420:	4619      	mov	r1, r3
  8003422:	200d      	movs	r0, #13
  8003424:	f7ff ff22 	bl	800326c <SX1272_WriteRegister>
 
-	SX1272_BurstRead(0, rx, length);
+	SX1272_BurstRead(ReqFifo, rx, length);
  8003428:	7bfb      	ldrb	r3, [r7, #15]
  800342a:	461a      	mov	r2, r3
  800342c:	6879      	ldr	r1, [r7, #4]
  800342e:	2000      	movs	r0, #0
  8003430:	f7ff ff86 	bl	8003340 <SX1272_BurstRead>
-	SX1272_WriteRegister(0x12, 0xFF); // clear interrupt
+	SX1272_WriteRegister(RegIrqFlags, 0xFF);//clear interrupt
  8003434:	21ff      	movs	r1, #255	; 0xff
  8003436:	2012      	movs	r0, #18
  8003438:	f7ff ff18 	bl	800326c <SX1272_WriteRegister>

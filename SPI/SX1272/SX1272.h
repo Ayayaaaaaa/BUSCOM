@@ -20,6 +20,8 @@ void SX1272_Init(void);
 //! @param in [val] : Value to write in the register
 void SX1272_WriteRegister(uint8_t reg, uint8_t val);
 
+void SX1272_WriteBurst(uint8_t reg, uint8_t* val, uint8_t len);
+
 //! @brief : Read a register (SPI)
 //! @param in [reg] : Register to read
 uint8_t SX1272_ReadRegister(uint8_t reg);
@@ -32,7 +34,7 @@ void SX1272_BurstRead(uint8_t addr, uint8_t* rxBuf, uint8_t length);
 
 //! @brief : Read registers in burst mode (SPI)
 //! @param in [tx] : Byte to send
-void SX1272_Transmit(uint8_t tx);
+void SX1272_Transmit(uint8_t* tx,uint8_t len);
 
 //! @brief : Read registers in burst mode (SPI)
 //! @param out [rx] : Byte buffer to read
