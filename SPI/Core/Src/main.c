@@ -22,8 +22,6 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include <stdio.h>
-//#include "SX1278.h"
 #include "SX1272.h"
 /* USER CODE END Includes */
 
@@ -43,7 +41,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 SPI_HandleTypeDef hspi1;
-
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
@@ -62,18 +59,7 @@ static void MX_SPI1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-//! @last_edit : 10/07/2020
-//! @details : PRINTF TO UART handling
-int __io_putchar(int ch)
-{
-	/* Place your implementation of fputc here */
-	/* e.g. write a character to the USARTx and Loop until the end of transmission */
-	while (HAL_OK != HAL_UART_Transmit(&huart2, (uint8_t *) &ch, 1, HAL_MAX_DELAY))
-	{
-		;
-	}
-	return ch;
-}
+
 /* USER CODE END 0 */
 
 /**
@@ -107,119 +93,26 @@ int main(void)
   MX_USART2_UART_Init();
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
-  //define necessary structures
-  /*SX1278_hw_t SX1278_hw;
-  SX1278_t SX1278;
-  int master = 1;
-  int ret;
-  char buffer[64];
-  int message;
-  int message_length;*/
-
-  uint8_t conf = 0, iqr = 0;
-
-  HAL_GPIO_WritePin(NSS_GPIO_Port, NSS_Pin, 1);
-
   SX1272_Init();
-
-  //uint8_t Rx = SX1272_Receive();
-
-  //SX1272_Transmit(0x42);
-
-  /*initialize hardware for LoRa module
-  SX1278_hw.dio0.port = DIO0_GPIO_Port;
-  SX1278_hw.dio0.pin = DIO0_Pin;
-  SX1278_hw.nss.port = NSS_GPIO_Port;
-  SX1278_hw.nss.pin = NSS_Pin;
-  SX1278_hw.reset.port = RESET_GPIO_Port;
-  SX1278_hw.reset.pin = RESET_Pin;
-  SX1278_hw.spi = &hspi1;
-
-  //initialize logic for LoRa module
-  SX1278.hw = &SX1278_hw;
-
-  //configure module
-  printf("Configuring LoRa module\r\n");
-  SX1278_begin(&SX1278, SX1278_433MHZ, SX1278_POWER_17DBM, SX1278_LORA_SF_8,
-          SX1278_LORA_BW_20_8KHZ, 10);
-  printf("Done configuring LoRaModule\r\n");
-
-  //entry transmitter (master) or receiver (slave) mode
-  if (master == 1) ret = SX1278_LoRaEntryTx(&SX1278, 16, 2000);
-  else ret = SX1278_LoRaEntryRx(&SX1278, 16, 2000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   uint8_t u8RCVLen = 0;
-  uint8_t PUTTY_BUFFER[50] = "V";
-  printf("Test");
-
-  HAL_UART_Transmit(&huart2, PUTTY_BUFFER, 9, HAL_MAX_DELAY);
+  uint8_t au8RxBuffer[50];
+  au8RxBuffer[0] = 0; //! using byte 0 as a flag
 
   while (1)
   {
-	  /*if (master == 1) {
-		  printf("Master ...\r\n");
-		  HAL_Delay(2500);
-		  printf("Sending package...\r\n");
-
-		  message_length = sprintf(buffer, "Hello %d", message);
-		  ret = SX1278_LoRaEntryTx(&SX1278, message_length, 2000);
-		  printf("Entry: %d\r\n", ret);
-
-		  printf("Sending %s\r\n", buffer);
-		  ret = SX1278_LoRaTxPacket(&SX1278, (uint8_t *) buffer, message_length, 2000);
-		  message += 1;
-
-		  printf("Transmission: %d\r\n", ret);
-		  printf("Package sent...\r\n");
-
-		  uint8_t txByte = 0x42;
-		  uint8_t rxByte = SX1278_SPIRead(&SX1278, 0x42);
-		  HAL_GPIO_WritePin(NSS_GPIO_Port, NSS_Pin, GPIO_PIN_RESET);
-		  HAL_SPI_TransmitReceive(&hspi1, &txByte, &rxByte, 1, 1000);
-		  txByte = 0x00;
-		  HAL_SPI_TransmitReceive(&hspi1, &txByte, &rxByte, 1, 1000);
-		  HAL_GPIO_WritePin(NSS_GPIO_Port, NSS_Pin, GPIO_PIN_SET);
-
-		  printf("Version : %d\r\n", rxByte);
-
-		/*uint8_t SEND = 0xAC;
-		uint8_t RCV = 0;
-		HAL_SPI_TransmitReceive(&hspi1, &SEND, &RCV, 1, HAL_MAX_DELAY);
-		if(RCV == SEND) printf("OKAY !");*
-	  } else {
-		  printf("Slave ...\r\n");
-		  HAL_Delay(1000);
-		  printf("Receiving package...\r\n");
-
-		  ret = SX1278_LoRaRxPacket(&SX1278);
-		  printf("Received: %d\r\n", ret);
-		  if (ret > 0) {
-			  SX1278_read(&SX1278, (uint8_t *) buffer, ret);
-			  printf("Content (%d): %s\r\n", ret, buffer);
-		  }
-		  printf("Package received ...\r\n");
-
-	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	u8RCVLen = SX1272_Receive(au8RxBuffer);
 
-
-	  //SX1272_Transmit(0x42);
-	  /*conf = SPI_Read_Register(0x01);
-	  HAL_Delay(15);
-	  iqr = SPI_Read_Register(0x12);*/
-	  u8RCVLen = SX1272_Receive(PUTTY_BUFFER);
-
-	  if(PUTTY_BUFFER[0] != 0) {
-		  HAL_UART_Transmit(&huart2, PUTTY_BUFFER, u8RCVLen, HAL_MAX_DELAY);
-		  PUTTY_BUFFER[0] = 0;
-	  }
-	  //HAL_Delay(500);
-
+	if(au8RxBuffer[0] != 0) {
+	  HAL_UART_Transmit(&huart2, au8RxBuffer, u8RCVLen, HAL_MAX_DELAY);
+	  au8RxBuffer[0] = 0; //! using byte 0 as a flag
+	}
   }
   /* USER CODE END 3 */
 }

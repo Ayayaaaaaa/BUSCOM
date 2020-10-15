@@ -6,12 +6,15 @@
  */
 
 #include "SX1272.h"
+#include "SX1272_Registers.h"
 
 extern SPI_HandleTypeDef hspi1;
 
 //! @last_edit : 15/10/2020
 //! @details :
 void SX1272_Init(void) {
+	HAL_GPIO_WritePin(NSS_GPIO_Port, NSS_Pin, 1);
+
 	SX1272_WriteRegister(RegOpMode, FSK_SLEEP);
 
 	HAL_Delay(15);
@@ -39,7 +42,7 @@ void SX1272_WriteRegister(uint8_t reg, uint8_t val) {
 	HAL_GPIO_WritePin(NSS_GPIO_Port, NSS_Pin, 1);
 }
 
-void SPI_WriteBurst(uint8_t reg, uint8_t* val, uint8_t len){
+void SX1272_WriteBurst(uint8_t reg, uint8_t* val, uint8_t len) {
     HAL_GPIO_WritePin(NSS_GPIO_Port, NSS_Pin, 0);
     reg |= 0x80;
     HAL_SPI_Transmit(&hspi1, &reg, 1, 1000);
@@ -78,31 +81,32 @@ void SX1272_BurstRead(uint8_t addr, uint8_t* rxBuf, uint8_t length) {
 
 //! @last_edit : 15/10/2020
 //! @details :
-void SX1272_Transmit(uint8_t* Tx,uint8_t len){
-    uint8_t addr = SPI_Read_Register(RegFifoTxBaseAddr);//Tx base addr
-    SPI_Write_Register(RegFifoAddrPtr, addr);//write fifo addr ptr
-    SPI_Write_Register(RegPayloadLength, len);//Payload length
+void SX1272_Transmit(uint8_t* tx,uint8_t len) {
+    uint8_t addr = SX1272_ReadRegister(RegFifoTxBaseAddr);//Tx base addr
+    SX1272_WriteRegister(RegFifoAddrPtr, addr);//write fifo addr ptr
+    SX1272_WriteRegister(RegPayloadLength, len);//Payload length
 
     HAL_Delay(15);
-    SPI_Write_Register(RegOpMode, LORA_STBY);
+    SX1272_WriteRegister(RegOpMode, LORA_STBY);
     HAL_Delay(15);
 
-    SPI_WriteBurst(ReqFifo,Tx,len);
+    SX1272_WriteBurst(ReqFifo,tx,len);
 
     HAL_Delay(15);
-    SPI_Write_Register(RegOpMode, LORA_FSTX);
+    SX1272_WriteRegister(RegOpMode, LORA_FSTX);
     HAL_Delay(15);
-    SPI_Write_Register(RegOpMode, LORA_TX);
+    SX1272_WriteRegister(RegOpMode, LORA_TX);
     HAL_Delay(15);
 
-    while((SPI_Read_Register(RegIrqFlags) && 0x08)==0);//interrupt
-    SPI_Write_Register(RegIrqFlags, 0xFF);//clear interrupt
+    while((SX1272_ReadRegister(RegIrqFlags) && 0x08)==0);//interrupt
+    SX1272_WriteRegister(RegIrqFlags, 0xFF);//clear interrupt
 }
 
 //! @last_edit : 15/10/2020
 //! @details :
-uint8_t SX1272_Receive(uint8_t rx[50]) {
+uint8_t SX1272_Receive(uint8_t rx[RCV_BUFFER_MAX_LEN]) {
 	uint8_t length = 0;
+
 	uint8_t addr = SX1272_ReadRegister(RegFifoRxBaseAddr);//Rx base addr
 	SX1272_WriteRegister(RegFifoAddrPtr, addr);//write fifo addr ptr
 
@@ -113,7 +117,6 @@ uint8_t SX1272_Receive(uint8_t rx[50]) {
 	HAL_Delay(15);
 	SX1272_WriteRegister(RegOpMode, LORA_RX_CONTINUOUS);
 	HAL_Delay(15);
-
 
 	while((SX1272_ReadRegister(RegIrqFlags) && 0xC0)==0);//interrupt
 
@@ -129,6 +132,6 @@ uint8_t SX1272_Receive(uint8_t rx[50]) {
 
 	SX1272_BurstRead(ReqFifo, rx, length);
 	SX1272_WriteRegister(RegIrqFlags, 0xFF);//clear interrupt
-	return length;
 
+	return length;
 }
