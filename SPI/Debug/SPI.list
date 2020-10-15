@@ -27,21 +27,21 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   ALLOC
  11 .ARM.attributes 00000030  00000000  00000000  00020070  2**0
                   CONTENTS, READONLY
- 12 .debug_info   0000b72a  00000000  00000000  000200a0  2**0
+ 12 .debug_info   0000b713  00000000  00000000  000200a0  2**0
                   CONTENTS, READONLY, DEBUGGING
- 13 .debug_abbrev 00001d96  00000000  00000000  0002b7ca  2**0
+ 13 .debug_abbrev 00001d80  00000000  00000000  0002b7b3  2**0
                   CONTENTS, READONLY, DEBUGGING
- 14 .debug_aranges 000009e8  00000000  00000000  0002d560  2**3
+ 14 .debug_aranges 000009e8  00000000  00000000  0002d538  2**3
                   CONTENTS, READONLY, DEBUGGING
- 15 .debug_ranges 000008f0  00000000  00000000  0002df48  2**3
+ 15 .debug_ranges 000008f0  00000000  00000000  0002df20  2**3
                   CONTENTS, READONLY, DEBUGGING
- 16 .debug_macro  0002249b  00000000  00000000  0002e838  2**0
+ 16 .debug_macro  000224b0  00000000  00000000  0002e810  2**0
                   CONTENTS, READONLY, DEBUGGING
- 17 .debug_line   00008a80  00000000  00000000  00050cd3  2**0
+ 17 .debug_line   00008a7e  00000000  00000000  00050cc0  2**0
                   CONTENTS, READONLY, DEBUGGING
- 18 .debug_str    000cacbb  00000000  00000000  00059753  2**0
+ 18 .debug_str    000cacd1  00000000  00000000  0005973e  2**0
                   CONTENTS, READONLY, DEBUGGING
- 19 .comment      0000007b  00000000  00000000  0012440e  2**0
+ 19 .comment      0000007b  00000000  00000000  0012440f  2**0
                   CONTENTS, READONLY
  20 .debug_frame  00002e6c  00000000  00000000  0012448c  2**2
                   CONTENTS, READONLY, DEBUGGING
@@ -554,7 +554,7 @@ int main(void)
 		  PUTTY_BUFFER[0] = 0;
  8000660:	2300      	movs	r3, #0
  8000662:	703b      	strb	r3, [r7, #0]
-  {
+	  u8RCVLen = SX1272_Receive(PUTTY_BUFFER);
  8000664:	e7e9      	b.n	800063a <main+0x5e>
  8000666:	bf00      	nop
  8000668:	40020400 	.word	0x40020400
@@ -8361,12 +8361,12 @@ void SX1272_BurstRead(uint8_t addr, uint8_t* rxBuf, uint8_t length) {
  80035e4:	20000098 	.word	0x20000098
 
 080035e8 <SX1272_Receive>:
-	while((SX1272_ReadRegister(0x12) && 0x08)==0); // interrupt
-
 	SX1272_WriteRegister(0x12, 0xFF); // clear interrupt
 }
 
-uint8_t SX1272_Receive(uint8_t rx[50]) {
+//! @last_edit : 15/10/2020
+//! @details :
+uint8_t SX1272_Receive(uint8_t rx[RCV_BUFFER_MAX_LEN]) {
  80035e8:	b580      	push	{r7, lr}
  80035ea:	b084      	sub	sp, #16
  80035ec:	af00      	add	r7, sp, #0
@@ -8374,12 +8374,12 @@ uint8_t SX1272_Receive(uint8_t rx[50]) {
 	uint8_t length = 0;
  80035f0:	2300      	movs	r3, #0
  80035f2:	73fb      	strb	r3, [r7, #15]
-	uint8_t addr = SX1272_ReadRegister(0x0F);//Rx base addr
+	uint8_t addr = SX1272_ReadRegister(0x0F); // Rx base addr
  80035f4:	200f      	movs	r0, #15
  80035f6:	f7ff ff95 	bl	8003524 <SX1272_ReadRegister>
  80035fa:	4603      	mov	r3, r0
  80035fc:	73bb      	strb	r3, [r7, #14]
-	SX1272_WriteRegister(0x0D, addr);//write fifo addr ptr
+	SX1272_WriteRegister(0x0D, addr); // write fifo addr ptr
  80035fe:	7bbb      	ldrb	r3, [r7, #14]
  8003600:	4619      	mov	r1, r3
  8003602:	200d      	movs	r0, #13
@@ -8410,8 +8410,7 @@ uint8_t SX1272_Receive(uint8_t rx[50]) {
  8003632:	200f      	movs	r0, #15
  8003634:	f7fd fbe0 	bl	8000df8 <HAL_Delay>
 
-
-	while((SX1272_ReadRegister(0x12) && 0xC0)==0);//interrupt
+	while((SX1272_ReadRegister(0x12) && 0xC0)==0); // interrupt
  8003638:	bf00      	nop
  800363a:	2012      	movs	r0, #18
  800363c:	f7ff ff72 	bl	8003524 <SX1272_ReadRegister>
@@ -8433,18 +8432,18 @@ uint8_t SX1272_Receive(uint8_t rx[50]) {
  8003658:	e019      	b.n	800368e <SX1272_Receive+0xa6>
 	}
 
-	addr = SX1272_ReadRegister(0x10);//Rx current addr
+	addr = SX1272_ReadRegister(0x10); // Rx current addr
  800365a:	2010      	movs	r0, #16
  800365c:	f7ff ff62 	bl	8003524 <SX1272_ReadRegister>
  8003660:	4603      	mov	r3, r0
  8003662:	73bb      	strb	r3, [r7, #14]
-	length = SX1272_ReadRegister(0x13);//Rx current addr
+	length = SX1272_ReadRegister(0x13); // Rx current addr
  8003664:	2013      	movs	r0, #19
  8003666:	f7ff ff5d 	bl	8003524 <SX1272_ReadRegister>
  800366a:	4603      	mov	r3, r0
  800366c:	73fb      	strb	r3, [r7, #15]
 
-	SX1272_WriteRegister(0x0D, addr);//write fifo addr ptr
+	SX1272_WriteRegister(0x0D, addr); // write fifo addr ptr
  800366e:	7bbb      	ldrb	r3, [r7, #14]
  8003670:	4619      	mov	r1, r3
  8003672:	200d      	movs	r0, #13
@@ -8456,13 +8455,13 @@ uint8_t SX1272_Receive(uint8_t rx[50]) {
  800367c:	6879      	ldr	r1, [r7, #4]
  800367e:	2000      	movs	r0, #0
  8003680:	f7ff ff86 	bl	8003590 <SX1272_BurstRead>
-	SX1272_WriteRegister(0x12, 0xFF);//clear interrupt
+	SX1272_WriteRegister(0x12, 0xFF); // clear interrupt
  8003684:	21ff      	movs	r1, #255	; 0xff
  8003686:	2012      	movs	r0, #18
  8003688:	f7ff ff18 	bl	80034bc <SX1272_WriteRegister>
+
 	return length;
  800368c:	7bfb      	ldrb	r3, [r7, #15]
-
 }
  800368e:	4618      	mov	r0, r3
  8003690:	3710      	adds	r7, #16
