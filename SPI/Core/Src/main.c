@@ -23,6 +23,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "SX1272.h"
+#define RECEIVER 0
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -102,17 +103,25 @@ int main(void)
   uint8_t au8RxBuffer[50];
   au8RxBuffer[0] = 0; //! using byte 0 as a flag
 
+  uint8_t* msg = "Hello Allan\n\r";
+
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+#if RECEIVER == 0
+	SX1272_Transmit(msg, 13);
+	HAL_Delay(1000);
+#else
 	u8RCVLen = SX1272_Receive(au8RxBuffer);
 
 	if(au8RxBuffer[0] != 0) {
 	  HAL_UART_Transmit(&huart2, au8RxBuffer, u8RCVLen, HAL_MAX_DELAY);
 	  au8RxBuffer[0] = 0; //! using byte 0 as a flag
 	}
+#endif
+
   }
   /* USER CODE END 3 */
 }
