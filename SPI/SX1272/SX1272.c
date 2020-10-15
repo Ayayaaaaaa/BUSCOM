@@ -12,6 +12,8 @@ extern SPI_HandleTypeDef hspi1;
 //! @last_edit : 15/10/2020
 //! @details :
 void SX1272_Init(void) {
+	HAL_GPIO_WritePin(NSS_GPIO_Port, NSS_Pin, 1);
+
 	SX1272_WriteRegister(0x01, 0x00);
 
 	HAL_Delay(15);

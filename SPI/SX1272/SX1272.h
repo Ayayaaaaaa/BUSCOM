@@ -35,7 +35,7 @@ void SX1272_BurstRead(uint8_t addr, uint8_t* rxBuf, uint8_t length);
 void SX1272_Transmit(uint8_t tx);
 
 //! @brief : Read registers in burst mode (SPI)
-//! @param in [rx] : Byte buffer to read
+//! @param out [rx] : Byte buffer to read
 uint8_t SX1272_Receive(uint8_t rx[RCV_BUFFER_MAX_LEN]);
 
 #endif /* SX1272_H_ */
