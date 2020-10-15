@@ -7620,7 +7620,7 @@ uint8_t SX1272_ReadRegister(uint8_t reg) {
  800316a:	4814      	ldr	r0, [pc, #80]	; (80031bc <SX1272_ReadRegister+0x64>)
  800316c:	f7fd fff2 	bl	8001154 <HAL_GPIO_WritePin>
 
-	reg &= 0x7F;
+	reg &= 0x7F; //! MASK FOR R/W BIT
  8003170:	79fb      	ldrb	r3, [r7, #7]
  8003172:	f003 037f 	and.w	r3, r3, #127	; 0x7f
  8003176:	b2db      	uxtb	r3, r3

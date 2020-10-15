@@ -56,7 +56,7 @@ uint8_t SX1272_ReadRegister(uint8_t reg) {
 	uint8_t data = 0;
 	HAL_GPIO_WritePin(NSS_GPIO_Port, NSS_Pin, 0);
 
-	reg &= 0x7F;
+	reg &= 0x7F; //! MASK FOR R/W BIT
 
 	HAL_SPI_Transmit(&hspi1, &reg, 1, 1000);
 	HAL_SPI_Receive(&hspi1, &data, 1, 1000);
