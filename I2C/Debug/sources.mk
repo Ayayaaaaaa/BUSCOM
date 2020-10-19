@@ -21,6 +21,7 @@ OBJCOPY_BIN :=
 SUBDIRS := \
 CodeAPA \
 CodeAPA/ComUart \
+CodeAPA/I2C \
 CodeAPA/System \
 Core/Src \
 Core/Startup \

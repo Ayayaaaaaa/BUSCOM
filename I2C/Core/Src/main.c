@@ -97,13 +97,14 @@ int main(void)
   MX_USART2_UART_Init();
   MX_I2C3_Init();
   /* USER CODE BEGIN 2 */
-
+  APA_HAL_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  APA_HAL_Process();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

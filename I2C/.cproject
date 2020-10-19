@@ -49,6 +49,7 @@
 									<listOptionValue builtIn="false" value="../CodeAPA"/>
 									<listOptionValue builtIn="false" value="../CodeAPA/System"/>
 									<listOptionValue builtIn="false" value="../CodeAPA/ComUart"/>
+									<listOptionValue builtIn="false" value="../CodeAPA/I2C"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.148586371" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -180,5 +181,12 @@
 		</scannerConfigBuildInfo>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
-	<storageModule moduleId="refreshScope"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Debug">
+			<resource resourceType="PROJECT" workspacePath="/I2C"/>
+		</configuration>
+		<configuration configurationName="Release">
+			<resource resourceType="PROJECT" workspacePath="/I2C"/>
+		</configuration>
+	</storageModule>
 </cproject>
