@@ -65,3 +65,12 @@ void I2C_Scanner(void) {
 		HAL_UART_Transmit(&huart2, u8StrBuffer, u8StrLen, HAL_MAX_DELAY);
 	}
 }
+
+void I2C_ReadRegister(U8 slave_addr, U8 register_addr, U8* receive_buffer, U8 len)
+{
+    // first set the register pointer to the register wanted to be read
+    HAL_I2C_Master_Transmit(&hi2c3, slave_addr << 1, &register_addr, 1, 100);  // note the & operator which gives us the address of the register_pointer variable
+
+    // receive the 2 x 8bit data into the receive buffer
+    HAL_I2C_Master_Receive(&hi2c3, slave_addr << 1, receive_buffer, len, 100);
+}
