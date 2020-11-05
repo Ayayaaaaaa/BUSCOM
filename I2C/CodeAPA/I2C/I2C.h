@@ -15,5 +15,6 @@
 
 void I2C_Scanner(void);
 void I2C_ReadRegister(U8 slave_addr, U8 register_addr, U8* receive_buffer, U8 len);
+void I2C_WriteRegister(U8 slave_addr, U8 register_addr, U8 reg);
 
 #endif /* I2C_I2C_H_ */

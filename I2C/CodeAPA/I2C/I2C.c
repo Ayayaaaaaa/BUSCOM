@@ -66,6 +66,16 @@ void I2C_Scanner(void) {
 	}
 }
 
+void I2C_WriteRegister(U8 slave_addr, U8 register_addr, U8 reg)
+{
+    uint8_t data[2];
+
+    data[0] = register_addr;
+    data[1] = reg;
+    slave_addr = (slave_addr << 1) + 1;
+    HAL_I2C_Master_Transmit(&hi2c3, slave_addr, data, 2, 100);  // data is the start pointer of our array
+}
+
 void I2C_ReadRegister(U8 slave_addr, U8 register_addr, U8* receive_buffer, U8 len)
 {
     // first set the register pointer to the register wanted to be read
