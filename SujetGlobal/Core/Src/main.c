@@ -72,6 +72,17 @@ static void MX_SPI2_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+#define RTC_SLAVE			0x50
+
+void I2C_WriteRegister(uint8_t slave_addr, uint8_t register_addr, uint8_t reg)
+{
+    uint8_t data[2];
+
+    data[0] = register_addr;
+    data[1] = reg;
+    slave_addr = (slave_addr << 1) + 1;
+    HAL_I2C_Master_Transmit(&hi2c1, slave_addr, data, 2, 100);  // data is the start pointer of our array
+}
 /* USER CODE END 0 */
 
 /**
@@ -109,7 +120,7 @@ int main(void)
   MX_DAC_Init();
   MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
-
+  I2C_WriteRegister(RTC_SLAVE, 0x08, 0b10001010);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -235,7 +246,7 @@ static void MX_CAN1_Init(void)
   /* USER CODE END CAN1_Init 1 */
   hcan1.Instance = CAN1;
   hcan1.Init.Prescaler = 16;
-  hcan1.Init.Mode = CAN_MODE_NORMAL;
+  hcan1.Init.Mode = CAN_MODE_LOOPBACK;
   hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
   hcan1.Init.TimeSeg1 = CAN_BS1_1TQ;
   hcan1.Init.TimeSeg2 = CAN_BS2_1TQ;
@@ -428,6 +439,16 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PC8 */
+  GPIO_InitStruct.Pin = GPIO_PIN_8;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
 }
 
