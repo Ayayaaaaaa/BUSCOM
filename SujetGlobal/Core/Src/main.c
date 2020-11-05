@@ -83,6 +83,12 @@ void I2C_WriteRegister(uint8_t slave_addr, uint8_t register_addr, uint8_t reg)
     slave_addr = (slave_addr << 1) + 1;
     HAL_I2C_Master_Transmit(&hi2c1, slave_addr, data, 2, 100);  // data is the start pointer of our array
 }
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	I2C_WriteRegister(RTC_SLAVE, 0x07, 0x00);
+	I2C_WriteRegister(RTC_SLAVE, 0x00, 0x04);
+}
 /* USER CODE END 0 */
 
 /**
@@ -120,13 +126,18 @@ int main(void)
   MX_DAC_Init();
   MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
-  I2C_WriteRegister(RTC_SLAVE, 0x08, 0b10001010);
+  I2C_WriteRegister(RTC_SLAVE, 0x07, 0x00);
+  I2C_WriteRegister(RTC_SLAVE, 0x00, 0x04);
+  I2C_WriteRegister(RTC_SLAVE, 0x08, 0xC2);
+  I2C_WriteRegister(RTC_SLAVE, 0x0F, 0x05);
+  //I2C_WriteRegister(RTC_SLAVE, 0x00, 0b00000100);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -427,11 +438,11 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : B1_Pin */
-  GPIO_InitStruct.Pin = B1_Pin;
+  /*Configure GPIO pins : B1_Pin PC8 */
+  GPIO_InitStruct.Pin = B1_Pin|GPIO_PIN_8;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : LD2_Pin */
   GPIO_InitStruct.Pin = LD2_Pin;
@@ -439,12 +450,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : PC8 */
-  GPIO_InitStruct.Pin = GPIO_PIN_8;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
