@@ -22,7 +22,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "System.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -72,23 +72,6 @@ static void MX_SPI2_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-#define RTC_SLAVE			0x50
-
-void I2C_WriteRegister(uint8_t slave_addr, uint8_t register_addr, uint8_t reg)
-{
-    uint8_t data[2];
-
-    data[0] = register_addr;
-    data[1] = reg;
-    slave_addr = (slave_addr << 1) + 1;
-    HAL_I2C_Master_Transmit(&hi2c1, slave_addr, data, 2, 100);  // data is the start pointer of our array
-}
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-	I2C_WriteRegister(RTC_SLAVE, 0x07, 0x00);
-	I2C_WriteRegister(RTC_SLAVE, 0x00, 0x04);
-}
 /* USER CODE END 0 */
 
 /**
@@ -126,18 +109,14 @@ int main(void)
   MX_DAC_Init();
   MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
-  I2C_WriteRegister(RTC_SLAVE, 0x07, 0x00);
-  I2C_WriteRegister(RTC_SLAVE, 0x00, 0x04);
-  I2C_WriteRegister(RTC_SLAVE, 0x08, 0xC2);
-  I2C_WriteRegister(RTC_SLAVE, 0x0F, 0x05);
-  //I2C_WriteRegister(RTC_SLAVE, 0x00, 0b00000100);
+  System_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
+	  System_Process();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
