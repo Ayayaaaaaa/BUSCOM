@@ -76,15 +76,23 @@ void System_Process(void) {
 		u16AdcValue = HAL_ADC_GetValue(&hadc1);
 		u16VoltageValue = (uint16_t)(((float)3300 / 4096) * u16AdcValue);
 
-		STR_LEN = sprintf(STR_BUFFER, "Voltage = %dmV\r\n", u16VoltageValue);
+		TxHeader.DLC = 2;
+		HAL_CAN_AddTxMessage(&hcan1, &TxHeader, &u16VoltageValue, &TxMailbox);
 
-		//HAL_SPI__IT(&hspi2, SPI_BUFFER, STR_LEN);
-		HAL_SPI_TransmitReceive_IT(&hspi2, STR_BUFFER, SPI_BUFFER, STR_LEN);
+		while(HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) != 3) {}; // Wait TX END
+
+		while(HAL_CAN_GetRxFifoFillLevel(&hcan1, CAN_RX_FIFO0) == 0); // WAIT RX not EMPTy
+
+		HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &RxHeader, CAN_BUFFER);
+
+		HAL_SPI_TransmitReceive_IT(&hspi2, CAN_BUFFER, SPI_BUFFER, 2);
 	}
 
 	if(bSpi) {
 		bSpi = 0;
-		HAL_UART_Transmit(&huart2, SPI_BUFFER, STR_LEN, 100);
+
+		STR_LEN = sprintf(STR_BUFFER, "Voltage = %dmV  \r", (SPI_BUFFER[1] << 8) + SPI_BUFFER[0]);
+		HAL_UART_Transmit(&huart2, STR_BUFFER, STR_LEN, 100);
 	}
 }
 
